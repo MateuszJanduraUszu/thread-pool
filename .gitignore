@@ -3,5 +3,6 @@
 # Copyright (c) Mateusz Jandura. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+/src/tplmgr/.vs/
 /src/tplmgr/bin/
 /src/tplmgr/tplmgr/bin/
