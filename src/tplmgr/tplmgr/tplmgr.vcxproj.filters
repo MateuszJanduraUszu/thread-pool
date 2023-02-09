@@ -14,6 +14,9 @@
     <Filter Include="src\tplmgr">
       <UniqueIdentifier>{8cb15b02-fd53-4aae-a81f-4247078681f0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="misc">
+      <UniqueIdentifier>{37c50782-acde-451b-8b14-ea091a6d1a0e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\tplmgr.rc">
@@ -74,5 +77,10 @@
     <ClCompile Include="src\tplmgr\thread_pool.cpp">
       <Filter>src\tplmgr</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\README.md">
+      <Filter>misc</Filter>
+    </None>
   </ItemGroup>
 </Project>
