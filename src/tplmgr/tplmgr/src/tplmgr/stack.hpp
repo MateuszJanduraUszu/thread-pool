@@ -10,6 +10,7 @@
 #if _TPLMGR_PREPROCESSOR_GUARD
 #include <tplmgr/allocator.hpp>
 #include <tplmgr/utils.hpp>
+#include <cstddef>
 #include <type_traits>
 
 _TPLMGR_BEGIN
@@ -187,7 +188,7 @@ public:
         {
             _Alloc& _Al    = _Mypair._Get_val2();
             _Node_t* _Node = _Storage._Bottom;
-            for (size_t _Which = 0; _Which < _Storage._Size - 2; ++_Which) { // find penultimate node
+            for (size_type _Which = 0; _Which < _Storage._Size - 2; ++_Which) { // find penultimate node
                 _Node = _Node->_Next;
             }
 

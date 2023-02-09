@@ -17,7 +17,7 @@ Features
 Future features
 ---
 
-* No STL containers
+* Thread-safe containers
 * No STL traits
 * Other compilers support
 

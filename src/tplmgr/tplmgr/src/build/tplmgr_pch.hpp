@@ -14,6 +14,7 @@
 #include <tplmgr/core.hpp>
 #include <tplmgr/shared_lock.hpp>
 #include <tplmgr/shared_queue.hpp>
+#include <tplmgr/stack.hpp>
 #include <tplmgr/thread.hpp>
 #include <tplmgr/thread_pool.hpp>
 #include <tplmgr/utils.hpp>

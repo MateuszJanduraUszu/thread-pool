@@ -9,18 +9,17 @@
 #include <tplmgr/core.hpp>
 #if _TPLMGR_PREPROCESSOR_GUARD
 #include <tplmgr/shared_queue.hpp>
+#include <tplmgr/stack.hpp>
 #include <tplmgr/utils.hpp>
 #include <atomic>
 #include <handleapi.h>
 #include <processthreadsapi.h>
 #include <sysinfoapi.h>
 #include <utility>
-#include <vector>
 
 _TPLMGR_BEGIN
 // STD types
 using _STD atomic;
-using _STD vector;
 
 // FUNCTION _Hardware_concurrency
 extern _NODISCARD size_t _Hardware_concurrency() noexcept;
@@ -90,7 +89,7 @@ public:
     _NODISCARD static size_t hardware_concurrency() noexcept;
 
     // registers a new callback
-    void register_event_callback(
+    _NODISCARD bool register_event_callback(
         const event _Event, const event_callback _Callback, void* const _Data);
 
     // checks if the thread is joinable
@@ -148,7 +147,7 @@ private:
     native_handle_type _Myimpl;
     id _Myid;
     _Thread_cache _Mycache;
-    vector<_Event_callback> _Mycbs;
+    _Stack<_Event_callback> _Mycbs;
 };
 _TPLMGR_END
 

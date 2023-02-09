@@ -92,9 +92,16 @@ unsigned long __stdcall thread::_Schedule_handler(void* const _Data) noexcept {
 
 // FUNCTION thread::_Invoke_callbacks
 void thread::_Invoke_callbacks(const event _Event) noexcept {
-    for (const _Event_callback& _Cb : _Mycbs) {
-        if (_Cb._Event == _Event) {
-            (*_Cb._Func)(_Cb._Event, _Cb._Data);
+    if (!_Mycbs._Empty()) {
+        size_t _Size = _Mycbs._Size();
+        auto* _Node  = _Mycbs._Bottom();
+        while (_Size-- > 0 && _Node) {
+            _Event_callback& _Cb = _Node->_Value;
+            if (_Cb._Event == _Event) {
+                (*_Cb._Func)(_Cb._Event, _Cb._Data);
+            }
+
+            _Node = _Node->_Next;
         }
     }
 }
@@ -108,7 +115,7 @@ void thread::_Set_state(const thread_state _New_state) noexcept {
 void thread::_Erase_data() noexcept {
     _Set_state(thread_state::terminated);
     _Mycache._Queue.clear(); // clear task queue
-    _Mycbs.clear(); // clear event callbacks
+    _Mycbs._Clear(); // clear event callbacks
     ::CloseHandle(_Myimpl); // close thread handle
     _Myimpl = nullptr;
     _Myid   = 0;
@@ -148,9 +155,9 @@ _NODISCARD size_t thread::hardware_concurrency() noexcept {
 }
 
 // FUNCTION thread::register_event_callback
-void thread::register_event_callback(
+_NODISCARD bool thread::register_event_callback(
     const event _Event, const event_callback _Callback, void* const _Data) {
-    _Mycbs.push_back(_Event_callback{_Event, _Callback, _Data});
+    return _Mycbs._Push(_Event_callback{_Event, _Callback, _Data});
 }
 
 // FUNCTION thread::joinable

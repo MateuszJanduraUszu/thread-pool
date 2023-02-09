@@ -57,6 +57,9 @@
     <ClInclude Include="src\tplmgr\async.hpp">
       <Filter>src\tplmgr</Filter>
     </ClInclude>
+    <ClInclude Include="src\tplmgr\stack.hpp">
+      <Filter>src\tplmgr</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\build\main.cpp">
