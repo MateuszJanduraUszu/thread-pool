@@ -204,7 +204,7 @@ public:
     }
 
 private:
-    mutable _Ebco_pair<_Storage_t, _Alloc> _Mypair;
+    _Ebco_pair<_Storage_t, _Alloc> _Mypair;
 };
 _TPLMGR_END
 

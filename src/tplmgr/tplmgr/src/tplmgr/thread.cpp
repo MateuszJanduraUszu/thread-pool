@@ -50,10 +50,11 @@ thread::thread() noexcept : _Myid(0), _Mycache(thread_state::waiting), _Mycbs() 
 }
 
 thread::thread(const task _Task, void* const _Data) noexcept
-    : _Myid(0), _Mycache(thread_state::working), _Mycbs() {
-    _Mycache._Queue.push(_Thread_task{_Task, _Data}); // schedule an immediate task
-    if (!_Attach()) {
-        _Mycache._Queue.clear();
+    : _Myimpl(nullptr), _Myid(0), _Mycache(thread_state::working), _Mycbs() {
+    if (_Mycache._Queue.push(_Thread_task{_Task, _Data})) { // try schedule an immediate task
+        if (!_Attach()) {
+            _Mycache._Queue.clear();
+        }
     }
 }
 
@@ -192,7 +193,10 @@ _NODISCARD bool thread::schedule_task(const task _Task, void* const _Data) noexc
         return false;
     }
 
-    _Mycache._Queue.push(_Thread_task{_Task, _Data});
+    if (!_Mycache._Queue.push(_Thread_task{_Task, _Data})) {
+        return false;
+    }
+    
     if (_State != thread_state::working) { // notify waiting thread
         (void) resume();
     }

@@ -16,8 +16,10 @@
 #include <type_traits>
 
 _TPLMGR_BEGIN
+#ifdef __cpp_aligned_new
 // STD types
 using _STD align_val_t;
+#endif // __cpp_aligned_new
 
 // CONSTANT TEMPLATE _Default_new_alignof
 template <class _Ty>
