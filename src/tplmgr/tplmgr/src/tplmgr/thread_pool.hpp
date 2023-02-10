@@ -13,6 +13,7 @@
 #include <tplmgr/utils.hpp>
 #include <cstddef>
 #include <type_traits>
+#include <utility>
 
 _TPLMGR_BEGIN
 // STRUCT _Thread_list_node
@@ -91,7 +92,7 @@ private:
     // tries to reduce _Count waiting threads
     void _Reduce_waiting_threads(size_t _Count, size_t& _Reduced) noexcept;
 
-    mutable _Ebco_pair<_Thread_list_storage, _Alloc> _Mypair;
+    _Ebco_pair<_Thread_list_storage, _Alloc> _Mypair;
 };
 
 // CLASS thread_pool

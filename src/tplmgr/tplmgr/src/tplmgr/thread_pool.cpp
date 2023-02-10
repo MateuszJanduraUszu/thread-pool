@@ -230,11 +230,8 @@ _NODISCARD thread* _Thread_list::_Select_thread_with_fewest_pending_tasks() noex
 }
 
 // FUNCTION thread_pool copy constructor/destructor
-thread_pool::thread_pool(const size_t _Threads) noexcept : _Mylist(1), _Mystate(_Working) {
-    if (_Threads > 0 && _Threads < thread::hardware_concurrency()) {
-        (void) _Mylist._Grow(_Threads - 1); // one thread already attached
-    }
-}
+thread_pool::thread_pool(const size_t _Threads) noexcept : _Mylist(
+    (_STD max)(_Threads, size_t{1})), _Mystate(_Working) {} // at least 1 thread must be active
 
 thread_pool::~thread_pool() noexcept {
     close();
@@ -307,17 +304,12 @@ _NODISCARD thread_pool::statistics thread_pool::collect_statistics() noexcept {
 
 // FUNCTION thread_pool::increase_threads
 _NODISCARD bool thread_pool::increase_threads(const size_t _Count) noexcept {
-    if (_Mylist._Size() + _Count > thread::hardware_concurrency() - 1) { // not enough resources
-        return false;
-    }
-
     return _Mylist._Grow(_Count);
 }
 
 // FUNCTION thread_pool::decrease_threads
 _NODISCARD bool thread_pool::decrease_threads(const size_t _Count) noexcept {
-    const size_t _Size = _Mylist._Size();
-    if (_Count >= _Size) { // at least 1 thread should be available
+    if (_Count >= _Mylist._Size()) { // at least 1 thread must be available
         return false;
     }
 
