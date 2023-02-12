@@ -10,15 +10,13 @@ Features
 * No standard primitives like [thread](https://en.cppreference.com/w/cpp/thread/thread), [mutex](https://en.cppreference.com/w/cpp/thread/mutex), [condition_variable](https://en.cppreference.com/w/cpp/thread/condition_variable) etc. (except [atomic](https://en.cppreference.com/w/cpp/atomic/atomic))
 * No exceptions
 * Calls WinAPI functions directly (no wrappers)
-* Almost no STL containers
+* Thread-safe containers
 * Each thread has its own task queue
 * Suspendable
 
 Future features
 ---
 
-* Thread-safe containers
-* No STL traits
 * Other compilers support
 
 How to use it?
@@ -57,10 +55,10 @@ The other is:
 The first one only accepts a `void` function type with one `void*` argument.
 The second one accepts any type of function with any arguments.
 
-How to
+How to...
 ---
 
-* Hire additional threads
+* hire additional threads
 
 ```cpp
 ::tplmgr::thread_pool _Pool(/* number of threads */);
@@ -71,7 +69,7 @@ if (_Pool.increase_threads(/* number of threads */)) {
 }
 ```
 
-* Dismiss a few existing threads
+* dismiss a few existing threads
 
 ```cpp
 ::tplmgr::thread_pool _Pool(/* number of threads */);
@@ -82,7 +80,7 @@ if (_Pool.decrease_threads(/* number of threads */)) {
 }
 ```
 
-* Collect thread-pool statistics
+* collect thread-pool statistics
 
 ```cpp
 ::tplmgr::thread_pool _Pool(/* number of threads */);
@@ -95,7 +93,6 @@ const ::tplmgr::thread_pool::statistics& _Stats = _Pool.collect_statistics();
 Important
 ---
 * Once the thread-pool is closed, it cannot be reopened
-* The number of threads must not be greater than the total number of threads - 1
 * At least 1 thread must be available
 * The thread-pool assumes that you handle all exceptions that occur in your task
 * If the thread-pool is about to close, all threads will finish their current task and discard others
@@ -106,10 +103,10 @@ Other usable types
 
 * `allocator` - provides thread-safe memory allocation/deallocation
 * `lock_guard` - automatically locks and unlocks an exclusive lock (RAII)
-* `shared_lock` - provides shared/exclusive lock
+* `shared_lock` - provides a shared/exclusive lock
 * `shared_lock_guard` - automatically locks and unlocks a shared lock (RAII)
-* `shared_queue` - controls access to the default queue
-* `thread` - manages single thread (state, task scheduling)
+* `shared_queue` - provides a thread-safe queue that can be shared between multiple threads
+* `thread` - manages a single thread (state, task scheduling)
 
 Dependencies
 ---
