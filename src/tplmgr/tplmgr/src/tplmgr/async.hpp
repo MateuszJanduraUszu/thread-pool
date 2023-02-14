@@ -37,7 +37,7 @@ public:
 
     static constexpr _Tuple* _Pack_data(_Fn&& _Func, _Types&&... _Args) {
         _Alloc _Al;
-        void* _Raw = _Al.allocate(sizeof(_Tuple));
+        void* const _Raw = _Al.allocate(sizeof(_Tuple));
         if (!_Raw) { // allocation failed
             return nullptr;
         }
@@ -55,7 +55,11 @@ _NODISCARD constexpr bool async(thread_pool& _Pool, _Fn&& _Func, _Types&&... _Ar
     const auto _Invoker     = &_Invoker_t::_Get_invoker;
     _Tuple_t* const _Packed = _Invoker_t::_Pack_data(
         _STD forward<_Fn>(_Func), _STD forward<_Types>(_Args)...);
-    return _Pool.schedule_task(_Invoker, _Packed);
+    if (_Packed) { // allocation succeeded, try schedule a new task
+        return _Pool.schedule_task(_Invoker, _Packed);
+    } else { // allocation failed, do nothing
+        return false;
+    }
 }
 _TPLMGR_END
 
