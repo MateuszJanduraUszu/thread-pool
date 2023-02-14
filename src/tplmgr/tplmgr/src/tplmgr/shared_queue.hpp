@@ -93,8 +93,8 @@ public:
         return _Mypair._Val1._Size == _Max_size();
     }
 
-    _NODISCARD constexpr value_type _Top() const noexcept {
-        return !_Empty() ? _Mypair._Val1._Last->_Value : value_type{};
+    _NODISCARD constexpr value_type _Front() const noexcept {
+        return !_Empty() ? _Mypair._Val1._First->_Value : value_type{};
     }
 
     constexpr void _Clear() noexcept {
@@ -162,11 +162,11 @@ public:
             return _Ty{};
         case 1:
         {
-            _Alloc& _Al    = _Mypair._Get_val2();
-            _Node_t* _Top  = _Storage._First; // same as _Storage._Last
-            const _Ty _Val = static_cast<_Ty&&>(_Top->_Value);
-            _Top->~_Unsynchronized_queue_node();
-            _Al.deallocate(_Top, sizeof(_Node_t));
+            _Alloc& _Al     = _Mypair._Get_val2();
+            _Node_t* _First = _Storage._First;
+            const _Ty _Val  = static_cast<_Ty&&>(_First->_Value);
+            _First->~_Unsynchronized_queue_node();
+            _Al.deallocate(_First, sizeof(_Node_t));
             _Storage._First = nullptr;
             _Storage._Last  = nullptr;
             _Storage._Size  = 0;
@@ -174,13 +174,13 @@ public:
         }
         default:
         {
-            _Alloc& _Al        = _Mypair._Get_val2();
-            _Node_t* _Top      = _Storage._Last;
-            _Top->_Prev->_Next = nullptr;
-            _Storage._Last     = _Top->_Prev;
-            const _Ty _Val     = static_cast<_Ty&&>(_Top->_Value);
-            _Top->~_Unsynchronized_queue_node();
-            _Al.deallocate(_Top, sizeof(_Node_t));
+            _Alloc& _Al          = _Mypair._Get_val2();
+            _Node_t* _First      = _Storage._First;
+            _First->_Next->_Prev = nullptr;
+            _Storage._First      = _First->_Next;
+            const _Ty _Val       = static_cast<_Ty&&>(_First->_Value);
+            _First->~_Unsynchronized_queue_node();
+            _Al.deallocate(_First, sizeof(_Node_t));
             --_Storage._Size;
             return _Val;
         }
@@ -238,9 +238,9 @@ public:
         return _Mycont._Max_size();
     }
 
-    _NODISCARD constexpr value_type top() const noexcept {
+    _NODISCARD constexpr value_type front() const noexcept {
         shared_lock_guard _Guard(_Mylock);
-        return _Mycont._Top();
+        return _Mycont._Front();
     }
     
     _NODISCARD constexpr bool push(const value_type& _Val) {
