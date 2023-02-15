@@ -48,8 +48,7 @@ public:
 
 // FUNCTION TEMPLATE async
 template <class _Fn, class... _Types>
-_NODISCARD constexpr bool async(thread_pool& _Pool, _Fn&& _Func, _Types&&... _Args) {
-    static_assert(noexcept(_Func(_STD forward<_Types>(_Args)...)), "Task must not throw.");
+_NODISCARD constexpr bool async(thread_pool& _Pool, _Fn&& _Func, _Types&&... _Args) noexcept {
     using _Invoker_t        = _Task_invoker<_Fn, _Types...>;
     using _Tuple_t          = typename _Invoker_t::_Tuple;
     const auto _Invoker     = &_Invoker_t::_Get_invoker;
@@ -57,6 +56,21 @@ _NODISCARD constexpr bool async(thread_pool& _Pool, _Fn&& _Func, _Types&&... _Ar
         _STD forward<_Fn>(_Func), _STD forward<_Types>(_Args)...);
     if (_Packed) { // allocation succeeded, try schedule a new task
         return _Pool.schedule_task(_Invoker, _Packed);
+    } else { // allocation failed, do nothing
+        return false;
+    }
+}
+
+template <class _Fn, class... _Types>
+_NODISCARD constexpr bool async(
+    thread_pool& _Pool, const task_priority _Priority, _Fn&& _Func, _Types&&... _Args) noexcept {
+    using _Invoker_t        = _Task_invoker<_Fn, _Types...>;
+    using _Tuple_t          = typename _Invoker_t::_Tuple;
+    const auto _Invoker     = &_Invoker_t::_Get_invoker;
+    _Tuple_t* const _Packed = _Invoker_t::_Pack_data(
+        _STD forward<_Fn>(_Func), _STD forward<_Types>(_Args)...);
+    if (_Packed) { // allocation succeeded, try schedule a new task
+        return _Pool.schedule_task(_Invoker, _Packed, _Priority);
     } else { // allocation failed, do nothing
         return false;
     }

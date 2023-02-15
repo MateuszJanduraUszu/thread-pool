@@ -12,6 +12,8 @@
 #include <tplmgr/stack.hpp>
 #include <tplmgr/utils.hpp>
 #include <atomic>
+#include <cstddef>
+#include <cstdint>
 #include <handleapi.h>
 #include <processthreadsapi.h>
 #include <sysinfoapi.h>
@@ -46,12 +48,22 @@ enum class thread_state : unsigned char {
     working
 };
 
+// ENUM CLASS task_priority
+enum class task_priority : unsigned char {
+    lowest,
+    low,
+    normal,
+    high,
+    highest
+};
+
 // STRUCT _Thread_task
 struct _Thread_task {
     using _Fn = void(__STDCALL_OR_CDECL*)(void*);
 
     _Fn _Func;
     void* _Data;
+    task_priority _Priority;
 };
 
 // STRUCT _Thread_cache
@@ -110,6 +122,10 @@ public:
     // tries to schedule a new task
     _NODISCARD bool schedule_task(const task _Task, void* const _Data) noexcept;
 
+    // tries to schedule a new task (provides a hint about priority)
+    _NODISCARD bool schedule_task(
+        const task _Task, void* const _Data, const task_priority _Priority) noexcept;
+
     // tries to terminate the thread (optionally wait)
     _NODISCARD bool terminate(const bool _Wait = true) noexcept;
 
@@ -137,6 +153,12 @@ private:
 
     // prepares thread termination
     void _Tidy() noexcept;
+
+    struct _Has_higher_priority {
+        // checks if the task has higher priority
+        _NODISCARD bool operator()(
+            const _Thread_task& _Left, const _Thread_task& _Right) const noexcept;
+    };
 
     struct _Event_callback {
         event _Event;

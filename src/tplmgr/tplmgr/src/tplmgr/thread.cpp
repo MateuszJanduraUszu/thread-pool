@@ -59,7 +59,7 @@ thread::thread(const task _Task, void* const _Data) noexcept
 }
 
 thread::~thread() noexcept {
-    (void) terminate(); // wait for the current task to finish, reject the rest
+    (void) terminate(); // wait for the current task to finish, discard the rest
 }
 
 // FUNCTION thread::_Schedule_handler
@@ -149,6 +149,12 @@ void thread::_Tidy() noexcept {
     (void) _Resume_thread(_Myimpl);
 }
 
+// FUNCTION thread::_Has_higher_priority::operator()
+_NODISCARD bool thread::_Has_higher_priority::operator()(
+    const _Thread_task& _Left, const _Thread_task& _Right) const noexcept {
+    return static_cast<uint8_t>(_Left._Priority) > static_cast<uint8_t>(_Right._Priority);
+}
+
 // FUNCTION thread::hardware_concurrency
 _NODISCARD size_t thread::hardware_concurrency() noexcept {
     static size_t _Count = _Hardware_concurrency();
@@ -193,10 +199,36 @@ _NODISCARD bool thread::schedule_task(const task _Task, void* const _Data) noexc
         return false;
     }
 
-    if (!_Mycache._Queue.push(_Thread_task{_Task, _Data})) {
+    if (!_Mycache._Queue.push_with_priority(
+        _Thread_task{_Task, _Data, task_priority::normal}, _Has_higher_priority{})) {
         return false;
     }
     
+    if (_State != thread_state::working) { // notify waiting thread
+        (void) resume();
+    }
+
+    return true;
+}
+
+_NODISCARD bool thread::schedule_task(
+    const task _Task, void* const _Data, const task_priority _Priority) noexcept {
+    const thread_state _State = state();
+    if (_State == thread_state::terminated || _Mycache._Queue.full()) {
+        return false;
+    }
+
+    if (_Priority == task_priority::lowest) { // always at the end
+        if (!_Mycache._Queue.push(_Thread_task{_Task, _Data, task_priority::lowest})) {
+            return false;
+        }
+    } else { // position not specified
+        if (!_Mycache._Queue.push_with_priority(
+            _Thread_task{_Task, _Data, _Priority}, _Has_higher_priority{})) {
+            return false;
+        }
+    }
+
     if (_State != thread_state::working) { // notify waiting thread
         (void) resume();
     }

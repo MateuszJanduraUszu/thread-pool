@@ -323,7 +323,17 @@ _NODISCARD bool thread_pool::schedule_task(const thread::task _Task, void* const
     }
 
     thread* const _Thread = _Select_ideal_thread();
-    return _Thread->schedule_task(_Task, _Data);
+    return _Thread ? _Thread->schedule_task(_Task, _Data) : false;
+}
+
+_NODISCARD bool thread_pool::schedule_task(
+    const thread::task _Task, void* const _Data, const task_priority _Priority) noexcept {
+    if (_Mystate == _Closed) { // scheduling inactive
+        return false;
+    }
+
+    thread* const _Thread = _Select_ideal_thread();
+    return _Thread ? _Thread->schedule_task(_Task, _Data, _Priority) : false;
 }
 
 // FUNCTION thread_pool::suspend

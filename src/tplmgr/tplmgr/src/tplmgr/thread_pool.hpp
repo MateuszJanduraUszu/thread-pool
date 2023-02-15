@@ -138,6 +138,10 @@ public:
     // tries to schedule a new task
     _NODISCARD bool schedule_task(const thread::task _Task, void* const _Data) noexcept;
 
+    // tries to schedule a new task (provides a hint about priority)
+    _NODISCARD bool schedule_task(
+        const thread::task _Task, void* const _Data, const task_priority _Priority) noexcept;
+
     // tries to suspend the thread-pool
     _NODISCARD bool suspend() noexcept;
 
