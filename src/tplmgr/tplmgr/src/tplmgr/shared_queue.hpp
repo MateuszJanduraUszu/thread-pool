@@ -155,6 +155,156 @@ public:
         return true;
     }
 
+    template <class _Pr>
+    _NODISCARD constexpr bool _Push_with_priority(const _Ty& _Val, _Pr _Pred) noexcept {
+        _Alloc& _Al      = _Mypair._Get_val2();
+        void* const _Raw = _Al.allocate(sizeof(_Node_t));
+        if (!_Raw) { // allocation failed
+            return false;
+        }
+
+        _Storage_t& _Storage = _Mypair._Val1;
+        switch (_Storage._Size) {
+        case 0: // allocate the first node, discard prediction
+            _Storage._First = ::new (_Raw) _Node_t(_Val);
+            _Storage._Last  = _Storage._First;
+            break;
+        case 1: // allocate the second node, use prediction
+        {
+            _Node_t*& _First = _Storage._First;
+            _Node_t*& _Last  = _Storage._Last;
+            if (_Pred(_Val, _First->_Value)) { // insert before the first node
+                _First->_Prev        = ::new (_Raw) _Node_t(_Val);
+                _First->_Prev->_Next = _First;
+                _Last                = _First;
+                _First               = _First->_Prev;
+                _First->_Next        = _Last;
+            } else { // insert after the first node
+                _First->_Next        = ::new (_Raw) _Node_t(_Val);
+                _First->_Next->_Prev = _First;
+                _Last                = _First->_Next;
+                _Last->_Prev         = _First;
+            }
+
+            break;
+        }
+        default: // allocate the next node, use prediction
+        {
+            _Node_t* _Node = _Storage._Last;
+            while (_Node->_Prev && _Pred(_Val, _Node->_Value)) { // find the matching node
+                _Node = _Node->_Prev;
+            }
+
+            if (_Pred(_Val, _Node->_Value)) { // insert before the selected node
+                if (_Node->_Prev) { // insert a new node between a pair of existing nodes
+                    _Node_t* const _Temp = _Node->_Prev;
+                    _Node->_Prev         = ::new (_Raw) _Node_t(_Val);
+                    _Node->_Prev->_Next  = _Node;
+                    _Node->_Prev->_Prev  = _Temp;
+                } else { // allocate a new node
+                    // Note: If _Node->_Prev is a null-pointer, it means that _Node is the first node.
+                    _Node->_Prev        = ::new (_Raw) _Node_t(_Val);
+                    _Node->_Prev->_Next = _Node;
+                    _Storage._First     = _Node->_Prev;
+                }
+            } else { // insert after the selected node
+                if (_Node->_Next) { // insert a new node between a pair of existing nodes
+                    _Node_t* const _Temp       = _Node->_Next;
+                    _Node->_Next               = ::new (_Raw) _Node_t(_Val);
+                    _Node->_Next->_Next        = _Temp;
+                    _Node->_Next->_Next->_Prev = _Node->_Next;
+                    _Node->_Next->_Prev        = _Node;
+                } else { // allocate a new node
+                    // Note: If _Node->_Next is a null-pointer, it means that _Node is the last node.
+                    _Node->_Next        = ::new (_Raw) _Node_t(_Val);
+                    _Node->_Next->_Prev = _Node;
+                    _Storage._Last      = _Node->_Next;
+                }
+            }
+
+            break;
+        }
+        }
+
+        ++_Storage._Size;
+        return true;
+    }
+
+    template <class _Pr>
+    _NODISCARD constexpr bool _Push_with_priority(_Ty&& _Val, _Pr _Pred) noexcept {
+        _Alloc& _Al      = _Mypair._Get_val2();
+        void* const _Raw = _Al.allocate(sizeof(_Node_t));
+        if (!_Raw) { // allocation failed
+            return false;
+        }
+
+        _Storage_t& _Storage = _Mypair._Val1;
+        switch (_Storage._Size) {
+        case 0: // allocate the first node, discard prediction
+            _Storage._First = ::new (_Raw) _Node_t(_STD move(_Val));
+            _Storage._Last  = _Storage._First;
+            break;
+        case 1: // allocate the second node, use prediction
+        {
+            _Node_t*& _First = _Storage._First;
+            _Node_t*& _Last  = _Storage._Last;
+            if (_Pred(_Val, _First->_Value)) { // insert before the first node
+                _First->_Prev        = ::new (_Raw) _Node_t(_STD move(_Val));
+                _First->_Prev->_Next = _First;
+                _Last                = _First;
+                _First               = _First->_Prev;
+                _First->_Next        = _Last;
+            } else { // insert after the first node
+                _First->_Next        = ::new (_Raw) _Node_t(_STD move(_Val));
+                _First->_Next->_Prev = _First;
+                _Last                = _First->_Next;
+                _Last->_Prev         = _First;
+            }
+
+            break;
+        }
+        default: // allocate the next node, use prediction
+        {
+            _Node_t* _Node = _Storage._Last;
+            while (_Node->_Prev && _Pred(_Val, _Node->_Value)) { // find the matching node
+                _Node = _Node->_Prev;
+            }
+
+            if (_Pred(_Val, _Node->_Value)) { // insert before the selected node
+                if (_Node->_Prev) { // insert a new node between a pair of existing nodes
+                    _Node_t* const _Temp = _Node->_Prev;
+                    _Node->_Prev         = ::new (_Raw) _Node_t(_STD move(_Val));
+                    _Node->_Prev->_Next  = _Node;
+                    _Node->_Prev->_Prev  = _Temp;
+                } else { // allocate a new node
+                    // Note: If _Node->_Prev is a null-pointer, it means that _Node is the first node.
+                    _Node->_Prev        = ::new (_Raw) _Node_t(_STD move(_Val));
+                    _Node->_Prev->_Next = _Node;
+                    _Storage._First     = _Node->_Prev;
+                }
+            } else { // insert after the selected node
+                if (_Node->_Next) { // insert a new node between a pair of existing nodes
+                    _Node_t* const _Temp       = _Node->_Next;
+                    _Node->_Next               = ::new (_Raw) _Node_t(_STD move(_Val));
+                    _Node->_Next->_Next        = _Temp;
+                    _Node->_Next->_Next->_Prev = _Node->_Next;
+                    _Node->_Next->_Prev        = _Node;
+                } else { // allocate a new node
+                    // Note: If _Node->_Next is a null-pointer, it means that _Node is the last node.
+                    _Node->_Next        = ::new (_Raw) _Node_t(_STD move(_Val));
+                    _Node->_Next->_Prev = _Node;
+                    _Storage._Last      = _Node->_Next;
+                }
+            }
+
+            break;
+        }
+        }
+
+        ++_Storage._Size;
+        return true;
+    }
+
     constexpr _Ty _Pop() noexcept {
         _Storage_t& _Storage = _Mypair._Val1;
         switch (_Storage._Size) {
@@ -243,14 +393,26 @@ public:
         return _Mycont._Front();
     }
     
-    _NODISCARD constexpr bool push(const value_type& _Val) {
+    _NODISCARD constexpr bool push(const value_type& _Val) noexcept {
         lock_guard _Guard(_Mylock);
         return _Mycont._Push(_Val);
     }
 
-    _NODISCARD constexpr bool push(value_type&& _Val) {
+    _NODISCARD constexpr bool push(value_type&& _Val) noexcept {
         lock_guard _Guard(_Mylock);
         return _Mycont._Push(_STD move(_Val));
+    }
+
+    template <class _Pr>
+    _NODISCARD constexpr bool push_with_priority(const value_type& _Val, _Pr _Pred) noexcept {
+        lock_guard _Guard(_Mylock);
+        return _Mycont._Push_with_priority(_Val, _Pred);
+    }
+
+    template <class _Pr>
+    _NODISCARD constexpr bool push_with_priority(value_type&& _Val, _Pr _Pred) noexcept {
+        lock_guard _Guard(_Mylock);
+        return _Mycont._Push_with_priority(_STD move(_Val), _Pred);
     }
 
     constexpr value_type pop() noexcept {
