@@ -24,10 +24,10 @@ using _STD align_val_t;
 // CONSTANT TEMPLATE _Default_new_alignof
 template <class _Ty>
 _INLINE_VARIABLE constexpr size_t _Default_new_alignof = (_STD max)(
-    __STDCPP_DEFAULT_NEW_ALIGNMENT__, alignof(_Ty)); // choose default allocation alignment
+    _DEFAULT_NEW_ALIGNMENT, alignof(_Ty)); // choose default allocation alignment
 
 // FUNCTION _Is_pow_of_2
-extern _NODISCARD constexpr bool _Is_pow_of_2(const size_t _Val) noexcept;
+extern constexpr bool _Is_pow_of_2(const size_t _Val) noexcept;
 
 // STRUCT allocator_traits
 struct _TPLMGR_API allocator_traits {
@@ -38,7 +38,7 @@ struct _TPLMGR_API allocator_traits {
     using const_pointer   = const void*;
 
     // tries to allocate _Size bytes of memory (alignment is optional)
-    _NODISCARD static __declspec(allocator) pointer allocate(
+    _NODISCARD_ATTR static _MSVC_ALLOCATOR pointer allocate(
         const size_type _Size, const size_type _Align) noexcept;
 
     // tries to deallocate _Size bytes of memory (alignment is optional)
@@ -59,7 +59,7 @@ public:
 
     constexpr allocator() noexcept                 = default;
     constexpr allocator(const allocator&) noexcept = default;
-    _CONSTEXPR20 ~allocator() noexcept             = default;
+    _CONSTEXPR_DTOR ~allocator() noexcept          = default;
 
     template <class _Other>
     constexpr allocator(const allocator<_Other>&) noexcept {}
@@ -69,34 +69,35 @@ public:
         return *this;
     }
 
-    _NODISCARD _CONSTEXPR20 __declspec(allocator) pointer allocate(const size_type _Count) noexcept {
+    _NODISCARD_ATTR _CONSTEXPR_DYNAMIC_ALLOC
+        _MSVC_ALLOCATOR pointer allocate(const size_type _Count) noexcept {
         return static_cast<pointer>(
             allocator_traits::allocate(_Count * sizeof(_Ty)), _Default_new_alignof<_Ty>);
     }
 
     template <class _Other, class... _Types>
     void construct(_Other* const _Ptr, _Types&&... _Args) noexcept {
-#if _HAS_CXX20
+#if _HAS_CXX20_FEATURES
         _STD construct_at(_Ptr, _STD forward<_Types>(_Args)...);
-#else // ^^^ _HAS_CXX20 ^^^ / vvv !_HAS_CXX20 vv
+#else // ^^^ _HAS_CXX20_FEATURES ^^^ / vvv !_HAS_CXX20_FEATURES vv
         ::new (_Ptr) _Ty(_STD forward<_Types>(_Args)...);
-#endif // _HAS_CXX20
+#endif // _HAS_CXX20_FEATURES
     }
 
-    _CONSTEXPR20 void deallocate(pointer _Ptr, const size_type _Count) noexcept {
+    _CONSTEXPR_DYNAMIC_ALLOC void deallocate(pointer _Ptr, const size_type _Count) noexcept {
         allocator_traits::deallocate(_Ptr, _Count * sizeof(_Ty), _Default_new_alignof<_Ty>);
     }
 
     template <class _Other>
     void destroy(_Other* const _Ptr) noexcept {
-#if _HAS_CXX17
+#if _HAS_CXX17_FEATURES
         _STD destroy_at(_Ptr);
-#else // ^^^ _HAS_CXX17 ^^^ / vvv !_HAS_CXX17 vvv
+#else // ^^^ _HAS_CXX17_FEATURES ^^^ / vvv !_HAS_CXX17_FEATURES vvv
         _Ptr->~_Other();
-#endif // _HAS_CXX17
+#endif // _HAS_CXX17_FEATURES
     }
 
-    _NODISCARD constexpr size_type max_size() const noexcept {
+    constexpr size_type max_size() const noexcept {
         return static_cast<size_type>(-1) / sizeof(value_type);
     }
 };
@@ -117,7 +118,7 @@ public:
 
     constexpr allocator() noexcept                 = default;
     constexpr allocator(const allocator&) noexcept = default;
-    _CONSTEXPR20 ~allocator() noexcept             = default;
+    _CONSTEXPR_DTOR ~allocator() noexcept          = default;
 
     template <class _Other>
     constexpr allocator(const allocator<_Other>&) noexcept {}
@@ -127,15 +128,15 @@ public:
         return *this;
     }
 
-    _NODISCARD __declspec(allocator) pointer allocate(const size_type _Size) noexcept {
-        return allocator_traits::allocate(_Size, __STDCPP_DEFAULT_NEW_ALIGNMENT__);
+    _NODISCARD_ATTR _MSVC_ALLOCATOR pointer allocate(const size_type _Size) noexcept {
+        return allocator_traits::allocate(_Size, _DEFAULT_NEW_ALIGNMENT);
     }
 
     void deallocate(pointer _Ptr, const size_type _Size) noexcept {
-        allocator_traits::deallocate(_Ptr, _Size, __STDCPP_DEFAULT_NEW_ALIGNMENT__);
+        allocator_traits::deallocate(_Ptr, _Size, _DEFAULT_NEW_ALIGNMENT);
     }
 
-    _NODISCARD constexpr size_type max_size() noexcept {
+    constexpr size_type max_size() noexcept {
         return static_cast<size_type>(-1);
     }
 };

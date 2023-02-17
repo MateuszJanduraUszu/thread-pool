@@ -9,12 +9,12 @@
 
 _TPLMGR_BEGIN
 // FUNCTION _Is_pow_of_2
-_NODISCARD constexpr bool _Is_pow_of_2(const size_t _Val) noexcept {
+constexpr bool _Is_pow_of_2(const size_t _Val) noexcept {
     return _Val > 0 && (_Val & (_Val - 1)) == 0;
 }
 
 // FUNCTION allocator_traits::allocate
-_NODISCARD __declspec(allocator) allocator_traits::pointer allocator_traits::allocate(
+_NODISCARD_ATTR __declspec(allocator) allocator_traits::pointer allocator_traits::allocate(
     const size_type _Size, const size_type _Align) noexcept {
     if (_Size == 0) { // no allocation
         return nullptr;
