@@ -24,7 +24,7 @@ _TPLMGR_BEGIN
 using _STD atomic;
 
 // FUNCTION _Hardware_concurrency
-extern _NODISCARD size_t _Hardware_concurrency() noexcept;
+extern size_t _Hardware_concurrency() noexcept;
 
 // FUNCTION _Wait_for_thread
 extern void _Wait_for_thread(void* const _Handle) noexcept;
@@ -36,10 +36,10 @@ extern void _Terminate_current_thread() noexcept;
 extern void _Suspend_current_thread() noexcept;
 
 // FUNCTION _Suspend_thread
-extern _NODISCARD bool _Suspend_thread(void* const _Handle) noexcept;
+extern _NODISCARD_ATTR bool _Suspend_thread(void* const _Handle) noexcept;
 
 // FUNCTION _Resume_thread
-extern _NODISCARD bool _Resume_thread(void* const _Handle) noexcept;
+extern _NODISCARD_ATTR bool _Resume_thread(void* const _Handle) noexcept;
 
 // ENUM CLASS thread_state
 enum class thread_state : unsigned char {
@@ -98,42 +98,42 @@ public:
     explicit thread(const task _Task, void* const _Data) noexcept;
 
     // returns the max number of threads
-    _NODISCARD static size_t hardware_concurrency() noexcept;
+    static size_t hardware_concurrency() noexcept;
 
     // registers a new callback
-    _NODISCARD bool register_event_callback(
+    _NODISCARD_ATTR bool register_event_callback(
         const event _Event, const event_callback _Callback, void* const _Data);
 
     // checks if the thread is joinable
-    _NODISCARD bool joinable() const noexcept;
+    bool joinable() const noexcept;
 
     // returns thread ID
-    _NODISCARD const id get_id() const noexcept;
+    const id get_id() const noexcept;
 
     // returns thread native handle
-    _NODISCARD const native_handle_type native_handle() const noexcept;
+    const native_handle_type native_handle() const noexcept;
 
     // returns the current state
-    _NODISCARD thread_state state() const noexcept;
+    thread_state state() const noexcept;
 
     // returns the number of pending tasks
-    _NODISCARD size_t pending_tasks() const noexcept;
+    size_t pending_tasks() const noexcept;
 
     // tries to schedule a new task
-    _NODISCARD bool schedule_task(const task _Task, void* const _Data) noexcept;
+    _NODISCARD_ATTR bool schedule_task(const task _Task, void* const _Data) noexcept;
 
     // tries to schedule a new task (provides a hint about priority)
-    _NODISCARD bool schedule_task(
+    _NODISCARD_ATTR bool schedule_task(
         const task _Task, void* const _Data, const task_priority _Priority) noexcept;
 
     // tries to terminate the thread (optionally wait)
-    _NODISCARD bool terminate(const bool _Wait = true) noexcept;
+    _NODISCARD_ATTR bool terminate(const bool _Wait = true) noexcept;
 
     // tries to suspend the thread
-    _NODISCARD bool suspend() noexcept;
+    _NODISCARD_ATTR bool suspend() noexcept;
 
     // tries to resume the thread
-    _NODISCARD bool resume() noexcept;
+    _NODISCARD_ATTR bool resume() noexcept;
 
 private:
     // manages pending tasks
@@ -156,8 +156,7 @@ private:
 
     struct _Has_higher_priority {
         // checks if the task has higher priority
-        _NODISCARD bool operator()(
-            const _Thread_task& _Left, const _Thread_task& _Right) const noexcept;
+        bool operator()(const _Thread_task& _Left, const _Thread_task& _Right) const noexcept;
     };
 
     struct _Event_callback {

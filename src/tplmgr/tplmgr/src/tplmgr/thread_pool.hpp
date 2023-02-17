@@ -48,25 +48,25 @@ public:
     explicit _Thread_list(const size_t _Count) noexcept;
 
     // returns the number of threads
-    _NODISCARD const size_t _Size() const noexcept;
+    const size_t _Size() const noexcept;
 
     // tries to hire _Count additional threads
-    _NODISCARD bool _Grow(size_t _Count) noexcept;
+    _NODISCARD_ATTR bool _Grow(size_t _Count) noexcept;
 
     // tries to dismiss _Count existing threads
-    _NODISCARD bool _Reduce(size_t _Count) noexcept;
+    _NODISCARD_ATTR bool _Reduce(size_t _Count) noexcept;
 
     // dismisses all threads
     void _Release() noexcept;
 
     // returns a pointer to the selected thread
-    _NODISCARD thread* _Select_thread(size_t _Which) noexcept;
+    thread* _Select_thread(size_t _Which) noexcept;
 
     // returns a pointer to the first waiting thread
-    _NODISCARD thread* _Select_any_waiting_thread() noexcept;
+    thread* _Select_any_waiting_thread() noexcept;
 
     // returns a pointer to the thread with the fewest pending threads
-    _NODISCARD thread* _Select_thread_with_fewest_pending_tasks() noexcept;
+    thread* _Select_thread_with_fewest_pending_tasks() noexcept;
 
     template <class _Fn, class... _Types>
     void _For_each_thread(_Fn&& _Func, _Types&&... _Args) noexcept {
@@ -84,7 +84,7 @@ private:
     using _Alloc = allocator<void>;
 
     // allocates a thread list node
-    _NODISCARD static bool _Allocate_node(_Thread_list_node** const _Node, _Alloc& _Al) noexcept;
+    _NODISCARD_ATTR static bool _Allocate_node(_Thread_list_node** const _Node, _Alloc& _Al) noexcept;
 
     // deallocates one node
     void _Free_node(_Thread_list_node* _Node) noexcept;
@@ -106,16 +106,16 @@ public:
     thread_pool& operator=(const thread_pool&) = delete;
 
     // returns the number of threads
-    _NODISCARD size_t threads() const noexcept;
+    size_t threads() const noexcept;
 
     // checks if the thread-pool is still open
-    _NODISCARD bool is_open() const noexcept;
+    bool is_open() const noexcept;
 
     // checks if the thread-pool is waiting
-    _NODISCARD bool is_waiting() const noexcept;
+    bool is_waiting() const noexcept;
 
     // checks if the thread-pool is working
-    _NODISCARD bool is_working() const noexcept;
+    bool is_working() const noexcept;
 
     // closes the thread-pool
     void close() noexcept;
@@ -127,26 +127,26 @@ public:
     };
 
     // collects the thread-pool statistics
-    _NODISCARD statistics collect_statistics() noexcept;
+    _NODISCARD_ATTR statistics collect_statistics() noexcept;
 
     // tries to hire _Count new threads to the thread-pool
-    _NODISCARD bool increase_threads(const size_t _Count) noexcept;
+    _NODISCARD_ATTR bool increase_threads(const size_t _Count) noexcept;
 
     // tries to dismiss _Count threads from the thread-pool
-    _NODISCARD bool decrease_threads(const size_t _Count) noexcept;
+    _NODISCARD_ATTR bool decrease_threads(const size_t _Count) noexcept;
 
     // tries to schedule a new task
-    _NODISCARD bool schedule_task(const thread::task _Task, void* const _Data) noexcept;
+    _NODISCARD_ATTR bool schedule_task(const thread::task _Task, void* const _Data) noexcept;
 
     // tries to schedule a new task (provides a hint about priority)
-    _NODISCARD bool schedule_task(
+    _NODISCARD_ATTR bool schedule_task(
         const thread::task _Task, void* const _Data, const task_priority _Priority) noexcept;
 
     // tries to suspend the thread-pool
-    _NODISCARD bool suspend() noexcept;
+    _NODISCARD_ATTR bool suspend() noexcept;
 
     // tries to resume the thread-pool
-    _NODISCARD bool resume() noexcept;
+    _NODISCARD_ATTR bool resume() noexcept;
 
 private:
     enum _Internal_state : unsigned char {
@@ -156,7 +156,7 @@ private:
     };
 
     // returns a pointer to the best thread for task scheduling
-    _NODISCARD thread* _Select_ideal_thread() noexcept;
+    thread* _Select_ideal_thread() noexcept;
 
     _Thread_list _Mylist;
     _Internal_state _Mystate;

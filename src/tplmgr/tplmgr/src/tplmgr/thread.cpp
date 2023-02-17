@@ -9,7 +9,7 @@
 
 _TPLMGR_BEGIN
 // FUNCTION _Hardware_concurrency
-_NODISCARD size_t _Hardware_concurrency() noexcept {
+size_t _Hardware_concurrency() noexcept {
     SYSTEM_INFO _Info;
     ::GetSystemInfo(_TPLMGR addressof(_Info));
     return static_cast<size_t>(_Info.dwNumberOfProcessors);
@@ -31,12 +31,12 @@ void _Suspend_current_thread() noexcept {
 }
 
 // FUNCTION _Suspend_thread
-_NODISCARD bool _Suspend_thread(void* const _Handle) noexcept {
+_NODISCARD_ATTR bool _Suspend_thread(void* const _Handle) noexcept {
     return ::SuspendThread(_Handle) != static_cast<unsigned long>(-1);
 }
 
 // FUNCTION _Resume_thread
-_NODISCARD bool _Resume_thread(void* const _Handle) noexcept {
+_NODISCARD_ATTR bool _Resume_thread(void* const _Handle) noexcept {
     return ::ResumeThread(_Handle) != static_cast<unsigned long>(-1);
 }
 
@@ -83,9 +83,9 @@ unsigned long __stdcall thread::_Schedule_handler(void* const _Data) noexcept {
 
             break;
         default:
-#if _HAS_CXX23
+#if _HAS_CXX23_FEATURES
             _STD unreachable();
-#endif // _HAS_CXX23
+#endif // _HAS_CXX23_FEATURES
             break;
         }
     }
@@ -150,50 +150,50 @@ void thread::_Tidy() noexcept {
 }
 
 // FUNCTION thread::_Has_higher_priority::operator()
-_NODISCARD bool thread::_Has_higher_priority::operator()(
+bool thread::_Has_higher_priority::operator()(
     const _Thread_task& _Left, const _Thread_task& _Right) const noexcept {
     return static_cast<uint8_t>(_Left._Priority) > static_cast<uint8_t>(_Right._Priority);
 }
 
 // FUNCTION thread::hardware_concurrency
-_NODISCARD size_t thread::hardware_concurrency() noexcept {
+size_t thread::hardware_concurrency() noexcept {
     static size_t _Count = _Hardware_concurrency();
     return _Count;
 }
 
 // FUNCTION thread::register_event_callback
-_NODISCARD bool thread::register_event_callback(
+_NODISCARD_ATTR bool thread::register_event_callback(
     const event _Event, const event_callback _Callback, void* const _Data) {
     return _Mycbs._Push(_Event_callback{_Event, _Callback, _Data});
 }
 
 // FUNCTION thread::joinable
-_NODISCARD bool thread::joinable() const noexcept {
+bool thread::joinable() const noexcept {
     return state() != thread_state::terminated;
 }
 
 // FUNCTION thread::get_id
-_NODISCARD const thread::id thread::get_id() const noexcept {
+const thread::id thread::get_id() const noexcept {
     return _Myid;
 }
 
 // FUNCTION thread::native_handle
-_NODISCARD const thread::native_handle_type thread::native_handle() const noexcept {
+const thread::native_handle_type thread::native_handle() const noexcept {
     return _Myimpl;
 }
 
 // FUNCTION thread::state
-_NODISCARD thread_state thread::state() const noexcept {
+thread_state thread::state() const noexcept {
     return _Mycache._State.load(_STD memory_order_relaxed);
 }
 
 // FUNCTION thread::pending_tasks
-_NODISCARD size_t thread::pending_tasks() const noexcept {
+size_t thread::pending_tasks() const noexcept {
     return _Mycache._Queue.size();
 }
 
 // FUNCTION thread::schedule_task
-_NODISCARD bool thread::schedule_task(const task _Task, void* const _Data) noexcept {
+_NODISCARD_ATTR bool thread::schedule_task(const task _Task, void* const _Data) noexcept {
     const thread_state _State = state();
     if (_State == thread_state::terminated || _Mycache._Queue.full()) {
         return false;
@@ -211,7 +211,7 @@ _NODISCARD bool thread::schedule_task(const task _Task, void* const _Data) noexc
     return true;
 }
 
-_NODISCARD bool thread::schedule_task(
+_NODISCARD_ATTR bool thread::schedule_task(
     const task _Task, void* const _Data, const task_priority _Priority) noexcept {
     const thread_state _State = state();
     if (_State == thread_state::terminated || _Mycache._Queue.full()) {
@@ -237,7 +237,7 @@ _NODISCARD bool thread::schedule_task(
 }
 
 // FUNCTION thread::terminate
-_NODISCARD bool thread::terminate(const bool _Wait) noexcept {
+_NODISCARD_ATTR bool thread::terminate(const bool _Wait) noexcept {
     if (!joinable()) {
         return false;
     }
@@ -252,7 +252,7 @@ _NODISCARD bool thread::terminate(const bool _Wait) noexcept {
 }
 
 // FUNCTION thread::suspend
-_NODISCARD bool thread::suspend() noexcept {
+_NODISCARD_ATTR bool thread::suspend() noexcept {
     if (state() != thread_state::working) { // must be working
         return false;
     }
@@ -268,7 +268,7 @@ _NODISCARD bool thread::suspend() noexcept {
 }
 
 // FUNCTION thread::resume
-_NODISCARD bool thread::resume() noexcept {
+_NODISCARD_ATTR bool thread::resume() noexcept {
     if (state() != thread_state::waiting) { // must be waiting
         return false;
     }

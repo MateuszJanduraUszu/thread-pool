@@ -30,7 +30,7 @@ _Thread_list::~_Thread_list() noexcept {
 }
 
 // FUNCTION _Thread_list::_Allocate_node
-_NODISCARD bool _Thread_list::_Allocate_node(_Thread_list_node** const _Node, _Alloc& _Al) noexcept {
+_NODISCARD_ATTR bool _Thread_list::_Allocate_node(_Thread_list_node** const _Node, _Alloc& _Al) noexcept {
     void* const _Raw = _Al.allocate(sizeof(_Thread_list_node));
     if (!_Raw) { // allocation failed
         return false;
@@ -80,12 +80,12 @@ void _Thread_list::_Reduce_waiting_threads(size_t _Count, size_t& _Reduced) noex
 }
 
 // FUNCTION _Thread_list::_Size
-_NODISCARD const size_t _Thread_list::_Size() const noexcept {
+const size_t _Thread_list::_Size() const noexcept {
     return _Mypair._Val1._Size;
 }
 
 // FUNCTION _Thread_list::_Grow
-_NODISCARD bool _Thread_list::_Grow(size_t _Count) noexcept {
+_NODISCARD_ATTR bool _Thread_list::_Grow(size_t _Count) noexcept {
     if (_Count == 0) { // no growth, do nothing
         return true;
     }
@@ -116,7 +116,7 @@ _NODISCARD bool _Thread_list::_Grow(size_t _Count) noexcept {
 }
 
 // FUNCTION _Thread_list::_Reduce
-_NODISCARD bool _Thread_list::_Reduce(size_t _Count) noexcept {
+_NODISCARD_ATTR bool _Thread_list::_Reduce(size_t _Count) noexcept {
     if (_Count == 0) { // no reduction, do nothing
         return true;
     }
@@ -169,7 +169,7 @@ void _Thread_list::_Release() noexcept {
 }
 
 // FUNCTION _Thread_list::_Select_thread
-_NODISCARD thread* _Thread_list::_Select_thread(size_t _Which) noexcept {
+thread* _Thread_list::_Select_thread(size_t _Which) noexcept {
     _Thread_list_storage& _Storage = _Mypair._Val1;
     if (_Which >= _Storage._Size) { // not enough threads
         return nullptr;
@@ -191,7 +191,7 @@ _NODISCARD thread* _Thread_list::_Select_thread(size_t _Which) noexcept {
 }
 
 // FUNCTION _Thread_list::_Select_any_waiting_thread
-_NODISCARD thread* _Thread_list::_Select_any_waiting_thread() noexcept {
+thread* _Thread_list::_Select_any_waiting_thread() noexcept {
     _Thread_list_storage& _Storage = _Mypair._Val1;
     if (_Storage._Size == 0) {
         return nullptr;
@@ -210,7 +210,7 @@ _NODISCARD thread* _Thread_list::_Select_any_waiting_thread() noexcept {
 }
 
 // FUNCTION _Thread_list::_Select_thread_with_fewest_pending_tasks
-_NODISCARD thread* _Thread_list::_Select_thread_with_fewest_pending_tasks() noexcept {
+thread* _Thread_list::_Select_thread_with_fewest_pending_tasks() noexcept {
     _Thread_list_storage& _Storage = _Mypair._Val1;
     if (_Storage._Size == 0) {
         return nullptr;
@@ -238,7 +238,7 @@ thread_pool::~thread_pool() noexcept {
 }
 
 // FUNCTION thread_pool::_Select_ideal_thread
-_NODISCARD thread* thread_pool::_Select_ideal_thread() noexcept {
+thread* thread_pool::_Select_ideal_thread() noexcept {
     switch (_Mystate) {
     case _Waiting: // all threads are waiting, choose the one with the fewest pending tasks
         return _Mylist._Select_thread_with_fewest_pending_tasks();
@@ -252,30 +252,30 @@ _NODISCARD thread* thread_pool::_Select_ideal_thread() noexcept {
         }
     }
     default:
-#if _HAS_CXX23
+#if _HAS_CXX23_FEATURES
         _STD unreachable();
-#endif // _HAS_CXX23
+#endif // _HAS_CXX23_FEATURES
         return nullptr;
     }
 }
 
 // FUNCTION thread_pool::threads
-_NODISCARD size_t thread_pool::threads() const noexcept {
+size_t thread_pool::threads() const noexcept {
     return _Mylist._Size();
 }
 
 // FUNCTION thread_pool::is_open
-_NODISCARD bool thread_pool::is_open() const noexcept {
+bool thread_pool::is_open() const noexcept {
     return _Mystate != _Closed;
 }
 
 // FUNCTION thread_pool::is_waiting
-_NODISCARD bool thread_pool::is_waiting() const noexcept {
+bool thread_pool::is_waiting() const noexcept {
     return _Mystate == _Waiting;
 }
 
 // FUNCTION thread_pool::is_working
-_NODISCARD bool thread_pool::is_working() const noexcept {
+bool thread_pool::is_working() const noexcept {
     return _Mystate == _Working;
 }
 
@@ -286,7 +286,7 @@ void thread_pool::close() noexcept {
 }
 
 // FUNCTION thread_pool::collect_statistics
-_NODISCARD thread_pool::statistics thread_pool::collect_statistics() noexcept {
+_NODISCARD_ATTR thread_pool::statistics thread_pool::collect_statistics() noexcept {
     statistics _Result = {0, 0, 0};
     _Mylist._For_each_thread(
         [&_Result](thread& _Thread) mutable noexcept {
@@ -303,12 +303,12 @@ _NODISCARD thread_pool::statistics thread_pool::collect_statistics() noexcept {
 }
 
 // FUNCTION thread_pool::increase_threads
-_NODISCARD bool thread_pool::increase_threads(const size_t _Count) noexcept {
+_NODISCARD_ATTR bool thread_pool::increase_threads(const size_t _Count) noexcept {
     return _Mylist._Grow(_Count);
 }
 
 // FUNCTION thread_pool::decrease_threads
-_NODISCARD bool thread_pool::decrease_threads(const size_t _Count) noexcept {
+_NODISCARD_ATTR bool thread_pool::decrease_threads(const size_t _Count) noexcept {
     if (_Count >= _Mylist._Size()) { // at least 1 thread must be available
         return false;
     }
@@ -317,7 +317,7 @@ _NODISCARD bool thread_pool::decrease_threads(const size_t _Count) noexcept {
 }
 
 // FUNCTION thread_pool::schedule_task
-_NODISCARD bool thread_pool::schedule_task(const thread::task _Task, void* const _Data) noexcept {
+_NODISCARD_ATTR bool thread_pool::schedule_task(const thread::task _Task, void* const _Data) noexcept {
     if (_Mystate == _Closed) { // scheduling inactive
         return false;
     }
@@ -326,7 +326,7 @@ _NODISCARD bool thread_pool::schedule_task(const thread::task _Task, void* const
     return _Thread ? _Thread->schedule_task(_Task, _Data) : false;
 }
 
-_NODISCARD bool thread_pool::schedule_task(
+_NODISCARD_ATTR bool thread_pool::schedule_task(
     const thread::task _Task, void* const _Data, const task_priority _Priority) noexcept {
     if (_Mystate == _Closed) { // scheduling inactive
         return false;
@@ -337,7 +337,7 @@ _NODISCARD bool thread_pool::schedule_task(
 }
 
 // FUNCTION thread_pool::suspend
-_NODISCARD bool thread_pool::suspend() noexcept {
+_NODISCARD_ATTR bool thread_pool::suspend() noexcept {
     if (_Mystate != _Working) { // must be working
         return false;
     }
@@ -352,7 +352,7 @@ _NODISCARD bool thread_pool::suspend() noexcept {
 }
 
 // FUNCTION thread_pool::resume
-_NODISCARD bool thread_pool::resume() noexcept {
+_NODISCARD_ATTR bool thread_pool::resume() noexcept {
     if (_Mystate != _Waiting) { // must be waiting
         return false;
     }
