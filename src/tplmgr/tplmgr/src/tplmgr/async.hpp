@@ -48,7 +48,7 @@ public:
 
 // FUNCTION TEMPLATE async
 template <class _Fn, class... _Types>
-_NODISCARD constexpr bool async(thread_pool& _Pool, _Fn&& _Func, _Types&&... _Args) noexcept {
+_NODISCARD_ATTR bool async(thread_pool& _Pool, _Fn&& _Func, _Types&&... _Args) noexcept {
     using _Invoker_t        = _Task_invoker<_Fn, _Types...>;
     using _Tuple_t          = typename _Invoker_t::_Tuple;
     const auto _Invoker     = &_Invoker_t::_Get_invoker;
@@ -62,7 +62,7 @@ _NODISCARD constexpr bool async(thread_pool& _Pool, _Fn&& _Func, _Types&&... _Ar
 }
 
 template <class _Fn, class... _Types>
-_NODISCARD constexpr bool async(
+_NODISCARD_ATTR bool async(
     thread_pool& _Pool, const task_priority _Priority, _Fn&& _Func, _Types&&... _Args) noexcept {
     using _Invoker_t        = _Task_invoker<_Fn, _Types...>;
     using _Tuple_t          = typename _Invoker_t::_Tuple;

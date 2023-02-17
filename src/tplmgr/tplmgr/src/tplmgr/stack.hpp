@@ -17,13 +17,13 @@ _TPLMGR_BEGIN
 // STRUCT TEMPLATE _Stack_node
 template <class _Ty>
 struct _Stack_node {
-    constexpr _Stack_node() noexcept : _Next(nullptr), _Value() {}
+    _Stack_node() noexcept : _Next(nullptr), _Value() {}
 
-    explicit constexpr _Stack_node(const _Ty& _Val) noexcept : _Next(nullptr), _Value(_Val) {}
+    explicit _Stack_node(const _Ty& _Val) noexcept : _Next(nullptr), _Value(_Val) {}
 
-    explicit constexpr _Stack_node(_Ty&& _Val) noexcept : _Next(nullptr), _Value(_STD move(_Val)) {}
+    explicit _Stack_node(_Ty&& _Val) noexcept : _Next(nullptr), _Value(_STD move(_Val)) {}
 
-    _CONSTEXPR20 ~_Stack_node() noexcept {}
+    ~_Stack_node() noexcept {}
 
     _Stack_node(const _Stack_node&) = delete;
     _Stack_node& operator=(const _Stack_node&) = delete;
@@ -34,9 +34,9 @@ struct _Stack_node {
 
 template <class _Ty>
 struct _Stack_storage {
-    constexpr _Stack_storage() noexcept : _Bottom(nullptr), _Top(nullptr), _Size(0) {}
+    _Stack_storage() noexcept : _Bottom(nullptr), _Top(nullptr), _Size(0) {}
 
-    _CONSTEXPR20 ~_Stack_storage() noexcept {}
+    ~_Stack_storage() noexcept {}
 
     _Stack_storage(const _Stack_storage&) = delete;
     _Stack_storage& operator=(const _Stack_storage&) = delete;
@@ -67,40 +67,40 @@ public:
     using reference       = _Ty&;
     using const_reference = const _Ty&;
 
-    constexpr _Stack() noexcept : _Mypair(_Ebco_default_init{}) {}
+    _Stack() noexcept : _Mypair(_Ebco_default_init{}) {}
 
-    _CONSTEXPR20 ~_Stack() noexcept {
+    ~_Stack() noexcept {
         _Clear();
     }
     
     _Stack(const _Stack&) = delete;
     _Stack& operator=(const _Stack&) = delete;
 
-    _NODISCARD constexpr bool _Empty() const noexcept {
+    bool _Empty() const noexcept {
         return _Mypair._Val1._Size == 0;
     }
 
-    _NODISCARD constexpr size_type _Size() const noexcept {
+    size_type _Size() const noexcept {
         return _Mypair._Val1._Size;
     }
 
-    _NODISCARD constexpr _Node_t* _Bottom() noexcept {
+    _Node_t* _Bottom() noexcept {
         return _Mypair._Val1._Bottom;
     }
 
-    _NODISCARD constexpr const _Node_t* _Bottom() const noexcept {
+    const _Node_t* _Bottom() const noexcept {
         return _Mypair._Val1._Bottom;
     }
 
-    _NODISCARD constexpr _Node_t* _Top() noexcept {
+    _Node_t* _Top() noexcept {
         return _Mypair._Val1._Top;
     }
 
-    _NODISCARD constexpr const _Node_t* _Top() const noexcept {
+    const _Node_t* _Top() const noexcept {
         return _Mypair._Val1._Top;
     }
 
-    constexpr void _Clear() noexcept {
+    void _Clear() noexcept {
         if (!_Empty()) {
             _Storage_t& _Storage = _Mypair._Val1;
             _Alloc& _Al          = _Mypair._Get_val2();
@@ -117,7 +117,7 @@ public:
         }
     }
 
-    _NODISCARD constexpr bool _Push(const _Ty& _Val) noexcept {
+    _NODISCARD_ATTR bool _Push(const _Ty& _Val) noexcept {
         _Alloc& _Al      = _Mypair._Get_val2();
         void* const _Raw = _Al.allocate(sizeof(_Node_t));
         if (!_Raw) { // allocation failed
@@ -137,7 +137,7 @@ public:
         return true;
     }
 
-    _NODISCARD constexpr bool _Push(_Ty&& _Val) noexcept {
+    _NODISCARD_ATTR bool _Push(_Ty&& _Val) noexcept {
         _Alloc& _Al      = _Mypair._Get_val2();
         void* const _Raw = _Al.allocate(sizeof(_Node_t));
         if (!_Raw) { // allocation failed
@@ -157,7 +157,7 @@ public:
         return true;
     }
 
-    constexpr void _Pop() noexcept {
+    void _Pop() noexcept {
         _Storage_t& _Storage = _Mypair._Val1;
         switch (_Storage._Size) {
         case 0:
