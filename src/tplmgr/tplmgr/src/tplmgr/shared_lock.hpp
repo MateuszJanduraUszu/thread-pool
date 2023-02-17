@@ -38,7 +38,7 @@ private:
 };
 
 // CLASS lock_guard
-class _TPLMGR_API lock_guard { // locks the code segment for exactly one thread
+class _TPLMGR_API _NODISCARD_ATTR lock_guard { // locks the code segment for exactly one thread
 public:
     explicit lock_guard(shared_lock& _Lock) noexcept;
     ~lock_guard() noexcept;
@@ -52,7 +52,7 @@ private:
 };
 
 // CLASS shared_lock_guard
-class _TPLMGR_API shared_lock_guard { // locks the code segment for multiple threads
+class _TPLMGR_API _NODISCARD_ATTR shared_lock_guard { // locks the code segment for multiple threads
 public:
     explicit shared_lock_guard(shared_lock& _Lock) noexcept;
     ~shared_lock_guard() noexcept;
