@@ -11,79 +11,87 @@ Features
 * No exceptions
 * Calls WinAPI functions directly (no wrappers)
 * Thread-safe containers
-* Each thread has its own task queue
+* Each thread has its own priority-based task queue
 * Suspendable
 
-Future features
+Task scheduling
 ---
 
-* Other compilers support
-
-How to use it?
----
-
-There are two ways, the first is:
+* standard scheduling:
 
 ```cpp
 #include <tplmgr/thread_pool.hpp>
 
-::tplmgr::thread_pool _Pool(/* number of threads */);
-value_type _Value;
-_Pool.schedule_task(
+::tplmgr::thread_pool _Pool(/* initial number of threads*/);
+value_type _Value; // value passed to the task
+if (!_Pool.schedule( // schedule a new task with normal priority
     [](void* const _Data) {
-        value_type* const _Value = static_cast<value_type*>(_Data);
-        // work to do...
+        value_type& _Value = *static_cast<value_type*>(_Data);
+        // do the task...
     },
-    ::tplmgr::addressof(_Value)
-);
+    ::tplmgr::addressof(_Value))) {
+    // handle failure...
+}
+
+if (!_Pool.schedule( // schedule a new task with high priority
+    [](void* const _Data) {
+        value_type& _Value = *static_cast<value_type*>(_Data);
+        // do the task...
+    },
+    ::tplmgr::addressof(_Value)), ::tplmgr::task_priority::high) {
+    // handle failure...
+}
 ```
 
-The other is:
+* custom scheduling:
 
 ```cpp
-#include <tplmgr/async.hpp>
 #include <tplmgr/thread_pool.hpp>
 
-::tplmgr::thread_pool _Pool(/* number of threads */);
-::tplmgr::async(_Pool,
-    []() noexcept {
-        // work to do...
+::tplmgr::thread_pool _Pool(/* initial number of threads */);
+value_type _Value; // value passed to the task
+if (!::tplmgr::async(_Pool, // schedule a new task with normal priority
+    [&_Value]{
+        // do the task...
     }
-);
+    )) {
+    // handle failure...
+}
+
+if (!::tplmgr::async(_Pool, ::tplmgr::task_priority::high, // schedule a new task with high priority
+    [&_Value]{
+        // do the task...
+    }
+    )) {
+    // handle failure...
+}
 ```
 
-The first one only accepts a `void` function type with one `void*` argument.
-The second one accepts any type of function with any arguments.
-
-How to...
+Examples
 ---
 
-* hire additional threads
+* increasing the thread-pool
 
 ```cpp
-::tplmgr::thread_pool _Pool(/* number of threads */);
-if (_Pool.increase_threads(/* number of threads */)) {
-    // on success...
-} else {
-    // on failure...
+::tplmgr::thread_pool _Pool(/* initial number of threads */);
+if (!_Pool.increase_threads(/* number of threads to hire */)) {
+    // handle failure...
 }
 ```
 
-* dismiss a few existing threads
+* decreasing the thread-pool
 
 ```cpp
-::tplmgr::thread_pool _Pool(/* number of threads */);
-if (_Pool.decrease_threads(/* number of threads */)) {
-    // on success...
-} else {
-    // on failure...
+::tplmgr::thread_pool _Pool(/* initial number of threads */);
+if (!_Pool.decrease_threads(/* number of threads to dismiss */)) {
+    // handle failure...
 }
 ```
 
-* collect thread-pool statistics
+* collecting thread-pool statistics
 
 ```cpp
-::tplmgr::thread_pool _Pool(/* number of threads */);
+::tplmgr::thread_pool _Pool(/* initial number of threads */);
 const ::tplmgr::thread_pool::statistics& _Stats = _Pool.collect_statistics();
 ::std::cout << "Waiting threads: " << _Stats.waiting_threads << '\n'
     << "Working threads: " << _Stats.working_threads << '\n'
@@ -97,18 +105,19 @@ Important
 * The thread-pool assumes that you handle all exceptions that occur in your task
 * If the thread-pool is about to close, all threads will finish their current task and discard others
 * When a thread finishes its current task and there are no other tasks in its task queue, it suspends itself and waits for any task
+* The default task priority is normal
 
 Other usable types
 ---
 
-* `allocator` - provides thread-safe memory allocation/deallocation
+* `allocator<T>` - provides thread-safe memory allocation/deallocation (compatible with the standard)
 * `lock_guard` - automatically locks and unlocks an exclusive lock (RAII)
 * `shared_lock` - provides a shared/exclusive lock
 * `shared_lock_guard` - automatically locks and unlocks a shared lock (RAII)
-* `shared_queue` - provides a thread-safe queue that can be shared between multiple threads
-* `thread` - manages a single thread (state, task scheduling)
+* `shared_queue<T>` - provides a thread-safe queue that can be shared between multiple threads
+* `thread` - manages a single thread (state, task scheduling etc.)
 
 Dependencies
 ---
 
-The library must be used on Windows with Microsoft Visual C++ (at least C++11 support) compiler.
+The library requires the Windows OS and a compiler with at least C++11 support.

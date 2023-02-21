@@ -45,12 +45,12 @@ _Thread_cache::_Thread_cache(const thread_state _State) noexcept
     : _State(_State), _Queue() {}
 
 // FUNCTION thread constructors/destructor
-thread::thread() noexcept : _Myid(0), _Mycache(thread_state::waiting), _Mycbs() {
+thread::thread() noexcept : _Myid(0), _Mycache(thread_state::waiting), _Mystack() {
     _Attach();
 }
 
 thread::thread(const task _Task, void* const _Data) noexcept
-    : _Myimpl(nullptr), _Myid(0), _Mycache(thread_state::working), _Mycbs() {
+    : _Myimpl(nullptr), _Myid(0), _Mycache(thread_state::working), _Mystack() {
     if (_Mycache._Queue.push(_Thread_task{_Task, _Data})) { // try schedule an immediate task
         if (!_Attach()) {
             _Mycache._Queue.clear();
@@ -93,13 +93,13 @@ unsigned long __stdcall thread::_Schedule_handler(void* const _Data) noexcept {
 
 // FUNCTION thread::_Invoke_callbacks
 void thread::_Invoke_callbacks(const event _Event) noexcept {
-    if (!_Mycbs._Empty()) {
-        size_t _Size = _Mycbs._Size();
-        auto* _Node  = _Mycbs._Bottom();
+    if (!_Mystack._Empty()) {
+        size_t _Size = _Mystack._Size();
+        auto* _Node  = _Mystack._Bottom();
         while (_Size-- > 0 && _Node) {
-            _Event_callback& _Cb = _Node->_Value;
-            if (_Cb._Event == _Event) {
-                (*_Cb._Func)(_Cb._Event, _Cb._Data);
+            _Event_callback& _Callback = _Node->_Value;
+            if (_Callback._Event == _Event) {
+                (*_Callback._Func)(_Callback._Event, _Callback._Data);
             }
 
             _Node = _Node->_Next;
@@ -116,7 +116,7 @@ void thread::_Set_state(const thread_state _New_state) noexcept {
 void thread::_Erase_data() noexcept {
     _Set_state(thread_state::terminated);
     _Mycache._Queue.clear(); // clear task queue
-    _Mycbs._Clear(); // clear event callbacks
+    _Mystack._Clear(); // clear event callbacks
     ::CloseHandle(_Myimpl); // close thread handle
     _Myimpl = nullptr;
     _Myid   = 0;
@@ -157,14 +157,14 @@ bool thread::_Has_higher_priority::operator()(
 
 // FUNCTION thread::hardware_concurrency
 size_t thread::hardware_concurrency() noexcept {
-    static size_t _Count = _Hardware_concurrency();
+    static const size_t _Count = _Hardware_concurrency();
     return _Count;
 }
 
 // FUNCTION thread::register_event_callback
 _NODISCARD_ATTR bool thread::register_event_callback(
     const event _Event, const event_callback _Callback, void* const _Data) {
-    return _Mycbs._Push(_Event_callback{_Event, _Callback, _Data});
+    return _Mystack._Push(_Event_callback{_Event, _Callback, _Data});
 }
 
 // FUNCTION thread::joinable

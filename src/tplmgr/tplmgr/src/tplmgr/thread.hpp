@@ -168,7 +168,7 @@ private:
     native_handle_type _Myimpl;
     id _Myid;
     _Thread_cache _Mycache;
-    _Stack<_Event_callback> _Mycbs;
+    _Stack<_Event_callback> _Mystack;
 };
 _TPLMGR_END
 
