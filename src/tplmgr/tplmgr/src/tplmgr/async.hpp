@@ -32,7 +32,7 @@ public:
         _Func(_STD forward<_Types>(_STD get<_Types>(_Packed))...);
         _Alloc _Al;
         _Packed.~_Tuple(); // destroy packed data
-        _Al.deallocate(_TPLMGR addressof(_Packed), sizeof(_Tuple));
+        _Al.deallocate(_Data, sizeof(_Tuple));
     }
 
     static constexpr _Tuple* _Pack_data(_Fn&& _Func, _Types&&... _Args) {

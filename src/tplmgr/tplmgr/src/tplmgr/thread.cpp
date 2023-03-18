@@ -249,8 +249,8 @@ _NODISCARD_ATTR bool thread::schedule_task(
         return false;
     }
 
-    if (_Priority == task_priority::lowest) { // always at the end
-        if (!_Mycache._Queue.push(_Thread_task{_Task, _Data, task_priority::lowest})) {
+    if (_Priority == task_priority::idle) { // always at the end
+        if (!_Mycache._Queue.push(_Thread_task{_Task, _Data, task_priority::idle})) {
             return false;
         }
     } else { // position not specified

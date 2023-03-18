@@ -50,11 +50,11 @@ enum class thread_state : unsigned char {
 
 // ENUM CLASS task_priority
 enum class task_priority : unsigned char {
-    lowest,
-    low,
+    idle,
+    below_normal,
     normal,
-    high,
-    highest
+    above_normal,
+    real_time
 };
 
 // STRUCT _Thread_task
