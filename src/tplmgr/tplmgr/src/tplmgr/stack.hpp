@@ -69,10 +69,32 @@ public:
 
     _Stack() noexcept : _Mypair(_Ebco_default_init{}) {}
 
+    _Stack(_Stack&& _Other) noexcept : _Mypair(_Ebco_default_init{}) {
+        _Mypair._Val1._Bottom        = _Other._Mypair._Val1._Bottom;
+        _Mypair._Val1._Top           = _Other._Mypair._Val1._Top;
+        _Mypair._Val1._Size          = _Other._Mypair._Val1._Size;
+        _Other._Mypair._Val1._Bottom = nullptr;
+        _Other._Mypair._Val1._Top    = nullptr;
+        _Other._Mypair._Val1._Size   = 0;
+    }
+
     ~_Stack() noexcept {
         _Clear();
     }
     
+    _Stack& operator=(_Stack&& _Other) noexcept {
+        if (this != _TPLMGR addressof(_Other)) {
+            _Mypair._Val1._Bottom        = _Other._Mypair._Val1._Bottom;
+            _Mypair._Val1._Top           = _Other._Mypair._Val1._Top;
+            _Mypair._Val1._Size          = _Other._Mypair._Val1._Size;
+            _Other._Mypair._Val1._Bottom = nullptr;
+            _Other._Mypair._Val1._Top    = nullptr;
+            _Other._Mypair._Val1._Size   = 0;
+        }
+
+        return *this;
+    }
+
     _Stack(const _Stack&) = delete;
     _Stack& operator=(const _Stack&) = delete;
 
