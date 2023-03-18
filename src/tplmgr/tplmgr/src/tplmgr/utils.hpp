@@ -25,11 +25,10 @@ using _STD true_type;
 
 // FUNCTION TEMPLATE addressof
 template <class _Ty>
-_NODISCARD_ATTR
 #if _HAS_CXX17_FEATURES
-    constexpr
+constexpr
 #endif // _HAS_CXX17_FEATURES
-        _Ty* addressof(_Ty& _Obj) noexcept {
+    _Ty* addressof(_Ty& _Obj) noexcept {
 #if _HAS_BUILTIN(__builtin_addressof)
     return __builtin_addressof(_Obj);
 #else // ^^^ _HAS_BUILTIN(__builtin_addressof) ^^^ / vvv !_HAS_BUILTIN(__builtin_addressof) vvv
@@ -40,6 +39,18 @@ _NODISCARD_ATTR
 
 template <class _Ty>
 const _Ty* addressof(const _Ty&&) = delete;
+
+// FUNCTION TEMPLATE exchange
+template <class _Ty, class _Other = _Ty>
+#if _HAS_CXX20_FEATURES
+constexpr
+#endif // _HAS_CXX20_FEATURES
+    _Ty exchange(_Ty& _Obj, _Other&& _New_val) noexcept(_STD is_nothrow_move_constructible_v<_Ty>
+        && _STD is_nothrow_assignable_v<_Ty&, _Other&&>) {
+    const _Ty _Old_val = static_cast<_Ty&&>(_Obj);
+    _Obj               = static_cast<_Other&&>(_New_val);
+    return _Old_val;
+}
 
 #if _HAS_CXX17_FEATURES
 // CONSTANT TEMPLATE _Conjunction_v
