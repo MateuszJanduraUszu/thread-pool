@@ -40,14 +40,31 @@ _NODISCARD_ATTR bool _Resume_thread(void* const _Handle) noexcept {
     return ::ResumeThread(_Handle) != static_cast<unsigned long>(-1);
 }
 
-// FUNCTION _Thread_cache copy constructor
+// FUNCTION _Thread_cache constructors
+_Thread_cache::_Thread_cache(_Thread_cache&& _Other) noexcept
+    : _State(_Other._State.exchange(thread_state::terminated)), _Queue(_STD move(_Other._Queue)) {}
+
 _Thread_cache::_Thread_cache(const thread_state _State) noexcept
     : _State(_State), _Queue() {}
+
+// FUNCTION _Thread_cache::operator=
+_Thread_cache& _Thread_cache::operator=(_Thread_cache&& _Other) noexcept {
+    if (this != _TPLMGR addressof(_Other)) {
+        _State.store(_Other._State.exchange(thread_state::terminated), _STD memory_order_relaxed);
+        _Queue = _STD move(_Other._Queue);
+    }
+
+    return *this;
+}
 
 // FUNCTION thread constructors/destructor
 thread::thread() noexcept : _Myid(0), _Mycache(thread_state::waiting), _Mystack() {
     _Attach();
 }
+
+thread::thread(thread&& _Other) noexcept
+    : _Myimpl(_TPLMGR exchange(_Other._Myimpl, nullptr)), _Myid(_TPLMGR exchange(_Other._Myid, 0)),
+    _Mycache(_STD move(_Other._Mycache)), _Mystack(_STD move(_Other._Mystack)) {}
 
 thread::thread(const task _Task, void* const _Data) noexcept
     : _Myimpl(nullptr), _Myid(0), _Mycache(thread_state::working), _Mystack() {
@@ -60,6 +77,20 @@ thread::thread(const task _Task, void* const _Data) noexcept
 
 thread::~thread() noexcept {
     (void) terminate(); // wait for the current task to finish, discard the rest
+}
+
+// FUNCTION thread::operator=
+thread& thread::operator=(thread&& _Other) noexcept {
+    if (this != _TPLMGR addressof(_Other)) {
+        _Myimpl        = _Other._Myimpl;
+        _Myid          = _Other._Myid;
+        _Mycache       = _STD move(_Other._Mycache);
+        _Mystack       = _STD move(_Other._Mystack);
+        _Other._Myimpl = nullptr;
+        _Other._Myid   = 0;
+    }
+
+    return *this;
 }
 
 // FUNCTION thread::_Schedule_handler

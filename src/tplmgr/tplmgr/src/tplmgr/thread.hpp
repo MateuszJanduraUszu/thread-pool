@@ -68,7 +68,14 @@ struct _Thread_task {
 
 // STRUCT _Thread_cache
 struct _Thread_cache { // internal thread cache
+    _Thread_cache(_Thread_cache&& _Other) noexcept;
     explicit _Thread_cache(const thread_state _State) noexcept;
+
+    _Thread_cache& operator=(_Thread_cache&& _Other) noexcept;
+
+    _Thread_cache() = delete;
+    _Thread_cache(const _Thread_cache&) = delete;
+    _Thread_cache& operator=(const _Thread_cache&) = delete;
 
     atomic<thread_state> _State;
     shared_queue<_Thread_task> _Queue;
@@ -90,12 +97,15 @@ public:
     using event_callback = void(__STDCALL_OR_CDECL*)(const event, void* const);
 
     thread() noexcept;
+    thread(thread&& _Other) noexcept;
     ~thread() noexcept;
 
     thread(const thread&) = delete;
     thread& operator=(const thread&) = delete;
 
     explicit thread(const task _Task, void* const _Data) noexcept;
+
+    thread& operator=(thread&& _Other) noexcept;
 
     // returns the max number of threads
     static size_t hardware_concurrency() noexcept;
