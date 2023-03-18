@@ -114,6 +114,36 @@ public:
         }
     }
 
+    struct _Released_storage {
+        _Node_t* _First;
+        _Node_t* _Last;
+        size_type _Size;
+    };
+
+    _NODISCARD_ATTR _Released_storage _Release() noexcept {
+        if (_Empty()) {
+            return _Released_storage{nullptr, nullptr, 0};
+        }
+        
+        _Storage_t& _Storage      = _Mypair._Val1;
+        _Released_storage _Result = {_Storage._First, _Storage._Last, _Storage._Size};
+        _Storage._First           = nullptr;
+        _Storage._Last            = nullptr;
+        _Storage._Size            = 0;
+        return _Result;
+    }
+
+    void _Assign(_Node_t* const _First, _Node_t* const _Last, const size_type _Size) noexcept {
+        if (!_Empty()) {
+            _Clear();
+        }
+
+        _Storage_t& _Storage = _Mypair._Val1;
+        _Storage._First      = _First;
+        _Storage._Last       = _Last;
+        _Storage._Size       = _Size;
+    }
+
     _NODISCARD_ATTR bool _Push(const _Ty& _Val) noexcept {
         _Alloc& _Al      = _Mypair._Get_val2();
         void* const _Raw = _Al.allocate(sizeof(_Node_t));
@@ -358,7 +388,21 @@ public:
 
     shared_queue() noexcept : _Mycont(), _Mylock() {}
 
+    shared_queue(shared_queue&& _Other) noexcept : _Mycont(), _Mylock() {
+        _Released_storage _Other_storage = _Other._Release();
+        _Assign(_Other_storage);
+    }
+
     ~shared_queue() noexcept {}
+
+    shared_queue& operator=(shared_queue&& _Other) noexcept {
+        if (this != _TPLMGR addressof(_Other)) {
+            _Released_storage _Other_storage = _Other._Release();
+            _Assign(_Other_storage);
+        }
+
+        return *this;
+    }
 
     shared_queue(const shared_queue&) = delete;
     shared_queue& operator=(const shared_queue&) = delete;
@@ -421,6 +465,18 @@ public:
     }
 
 private:
+    using _Released_storage = typename _Container::_Released_storage;
+
+    _NODISCARD_ATTR _Released_storage _Release() noexcept {
+        lock_guard _Guard(_Mylock);
+        return _Mycont._Release();
+    }
+
+    void _Assign(_Released_storage& _Storage) noexcept {
+        lock_guard _Guard(_Mylock);
+        _Mycont._Assign(_Storage._First, _Storage._Last, _Storage._Size);
+    }
+
     _Container _Mycont;
     mutable shared_lock _Mylock;
 };
