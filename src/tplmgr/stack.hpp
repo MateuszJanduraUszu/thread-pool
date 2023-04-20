@@ -29,7 +29,7 @@ struct _Stack_node {
     _Stack_node& operator=(const _Stack_node&) = delete;
 
     _Stack_node* _Next; // pointer to the next node
-    _Ty _Value;
+    _Ty _Value; // the stored value
 };
 
 template <class _Ty>

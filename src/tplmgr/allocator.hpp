@@ -47,7 +47,7 @@ struct _TPLMGR_API allocator_traits {
 
 // CLASS TEMPLATE allocator
 template <class _Ty>
-class allocator { // class for thread-safe memory/object management
+class allocator { // class for non-throwing memory/object management
 public:
     using value_type      = _Ty;
     using size_type       = size_t;
@@ -103,7 +103,7 @@ public:
 };
 
 template <>
-class allocator<void> { // class for thread-safe memory management (special case)
+class allocator<void> { // class for non-throwing memory management (special case)
 public:
     using value_type      = void;
     using size_type       = size_t;

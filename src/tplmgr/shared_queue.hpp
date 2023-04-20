@@ -33,7 +33,7 @@ struct _Unsynchronized_queue_node {
 
     _Unsynchronized_queue_node* _Next; // pointer to the next node
     _Unsynchronized_queue_node* _Prev; // pointer to the previous node
-    _Ty _Value;
+    _Ty _Value; // the stored value
 };
 
 // STRUCT TEMPLATE _Unsynchronized_queue_storage
@@ -53,7 +53,7 @@ struct _Unsynchronized_queue_storage {
 
 // CLASS TEMPLATE _Unsynchronized_queue
 template <class _Ty>
-class _Unsynchronized_queue { // thread-safe node-based queue
+class _Unsynchronized_queue { // non-throwing node-based queue
 private:
     using _Alloc     = allocator<void>;
     using _Node_t    = _Unsynchronized_queue_node<_Ty>;
@@ -156,8 +156,9 @@ public:
             _Storage._First = ::new (_Raw) _Node_t(_Val);
             _Storage._Last  = _Storage._First;
         } else { // allocate the next node
-            _Storage._Last->_Next = ::new (_Raw) _Node_t(_Val);
-            _Storage._Last        = _Storage._Last->_Next;
+            _Storage._Last->_Next        = ::new (_Raw) _Node_t(_Val);
+            _Storage._Last->_Next->_Prev = _Storage._Last;
+            _Storage._Last               = _Storage._Last->_Next;
         }
         
         ++_Storage._Size;
@@ -373,7 +374,7 @@ private:
 
 // CLASS TEMPLATE shared_queue
 template <class _Ty>
-class shared_queue { // queue that can be shared between multiple threads
+class shared_queue { // non-throwing thread-safe queue
 private:
     using _Container = _Unsynchronized_queue<_Ty>;
 
