@@ -31,8 +31,8 @@ struct _Thread_list_storage {
     _Thread_list_storage() noexcept;
     ~_Thread_list_storage() noexcept;
 
-    _Thread_list_node* _First; // pointer to the first node
-    _Thread_list_node* _Last; // pointer to the last node
+    _Thread_list_node* _Head; // pointer to the first node
+    _Thread_list_node* _Tail; // pointer to the last node
     size_t _Size; // number of nodes
 };
 
@@ -62,6 +62,9 @@ public:
     // returns a pointer to the selected thread
     thread* _Select_thread(size_t _Which) noexcept;
 
+    // retursn a pointer to the thread with the specified ID
+    thread* _Select_thread_by_id(const thread::id _Id) noexcept;
+
     // returns a pointer to the first waiting thread
     thread* _Select_any_waiting_thread() noexcept;
 
@@ -72,7 +75,7 @@ public:
     void _For_each_thread(_Fn&& _Func, _Types&&... _Args) noexcept {
         _Thread_list_storage& _Storage = _Mypair._Val1;
         if (_Storage._Size > 0) {
-            _Thread_list_node* _Node = _Storage._First;
+            _Thread_list_node* _Node = _Storage._Head;
             while (_Node) {
                 (void) _Func(_Node->_Thread, _STD forward<_Types>(_Args)...);
                 _Node = _Node->_Next;
@@ -90,7 +93,7 @@ private:
     void _Free_node(_Thread_list_node* _Node) noexcept;
 
     // tries to reduce _Count waiting threads
-    void _Reduce_waiting_threads(size_t _Count, size_t& _Reduced) noexcept;
+    void _Reduce_waiting_threads(size_t& _Count) noexcept;
 
     _Ebco_pair<_Thread_list_storage, _Alloc> _Mypair;
 };
@@ -129,6 +132,9 @@ public:
     // collects the thread-pool's statistics
     _NODISCARD_ATTR statistics collect_statistics() noexcept;
 
+    // checks if the thread is in the pool
+    bool is_thread_in_pool(const thread::id _Id) const noexcept;
+
     // tries to hire _Count new threads to the thread-pool
     _NODISCARD_ATTR bool increase_threads(const size_t _Count) noexcept;
 
@@ -153,7 +159,7 @@ public:
 
     // tries to resume the thread-pool
     _NODISCARD_ATTR bool resume() noexcept;
-
+    
 private:
     enum _Internal_state : unsigned char {
         _Closed,
@@ -164,7 +170,7 @@ private:
     // returns a pointer to the best thread for task scheduling
     thread* _Select_ideal_thread() noexcept;
 
-    _Thread_list _Mylist;
+    mutable _Thread_list _Mylist;
     _Internal_state _Mystate;
 };
 _TPLMGR_END

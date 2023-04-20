@@ -14,7 +14,7 @@ _Thread_list_node::_Thread_list_node() noexcept : _Next(nullptr), _Prev(nullptr)
 _Thread_list_node::~_Thread_list_node() noexcept {}
 
 // FUNCTION _Thread_list_storage constructor/destructor
-_Thread_list_storage::_Thread_list_storage() noexcept : _First(nullptr), _Last(nullptr), _Size(0) {}
+_Thread_list_storage::_Thread_list_storage() noexcept : _Head(nullptr), _Tail(nullptr), _Size(0) {}
 
 _Thread_list_storage::~_Thread_list_storage() noexcept {}
 
@@ -44,14 +44,14 @@ _NODISCARD_ATTR bool _Thread_list::_Allocate_node(_Thread_list_node** const _Nod
 void _Thread_list::_Free_node(_Thread_list_node* _Node) noexcept {
     _Thread_list_storage& _Storage = _Mypair._Val1;
     _Alloc& _Al                    = _Mypair._Get_val2();
-    if (_Node == _Storage._First) { // free the first node
+    if (_Node == _Storage._Head) { // free the first node
         if (_Node->_Next) {
             _Node->_Next->_Prev = nullptr;
-            _Storage._First     = _Node->_Next;
+            _Storage._Head      = _Node->_Next;
         }
-    } else if (_Node == _Storage._Last) { // free the last node
+    } else if (_Node == _Storage._Tail) { // free the last node
         _Node->_Prev->_Next = nullptr;
-        _Storage._Last      = _Node->_Prev;
+        _Storage._Tail      = _Node->_Prev;
     } else { // free the inner node
         _Node->_Prev->_Next = _Node->_Next;
         _Node->_Next->_Prev = _Node->_Prev;
@@ -63,16 +63,15 @@ void _Thread_list::_Free_node(_Thread_list_node* _Node) noexcept {
 }
 
 // FUNCTION _Thread_list::_Reduce_waiting_threads
-void _Thread_list::_Reduce_waiting_threads(size_t _Count, size_t& _Reduced) noexcept {
+void _Thread_list::_Reduce_waiting_threads(size_t& _Count) noexcept {
     _Thread_list_storage& _Storage = _Mypair._Val1;
-    _Thread_list_node* _Node       = _Storage._First;
+    _Thread_list_node* _Node       = _Storage._Head;
     _Thread_list_node* _Next;
     while (_Node && _Count > 0) {
         _Next = _Node->_Next;
         if (_Node->_Thread.state() == thread_state::waiting) {
             _Free_node(_Node);
             --_Count;
-            ++_Reduced;
         }
 
         _Node = _Next;
@@ -93,22 +92,22 @@ _NODISCARD_ATTR bool _Thread_list::_Grow(size_t _Count) noexcept {
     _Thread_list_storage& _Storage = _Mypair._Val1;
     _Alloc& _Al                    = _Mypair._Get_val2();
     if (_Storage._Size == 0) { // allocate the first node
-        if (!_Allocate_node(_TPLMGR addressof(_Storage._First), _Al)) {
+        if (!_Allocate_node(_TPLMGR addressof(_Storage._Head), _Al)) {
             return false;
         }
 
-        _Storage._Last = _Storage._First;
+        _Storage._Tail = _Storage._Head;
         ++_Storage._Size;
         --_Count; // one node is already allocated
     }
 
     while (_Count-- > 0) {
-        if (!_Allocate_node(_TPLMGR addressof(_Storage._Last->_Next), _Al)) {
+        if (!_Allocate_node(_TPLMGR addressof(_Storage._Tail->_Next), _Al)) {
             return false;
         }
 
-        _Storage._Last->_Next->_Prev = _Storage._Last;
-        _Storage._Last               = _Storage._Last->_Next;
+        _Storage._Tail->_Next->_Prev = _Storage._Tail;
+        _Storage._Tail               = _Storage._Tail->_Next;
         ++_Storage._Size;
     }
 
@@ -131,9 +130,7 @@ _NODISCARD_ATTR bool _Thread_list::_Reduce(size_t _Count) noexcept {
         return true;
     }
 
-    size_t _Reduced = 0;
-    _Reduce_waiting_threads(_Count, _Reduced);
-    _Count -= _Reduced;
+    _Reduce_waiting_threads(_Count);
     if (_Count == 0) { // no need to reduce more threads
         return true;
     }
@@ -142,9 +139,9 @@ _NODISCARD_ATTR bool _Thread_list::_Reduce(size_t _Count) noexcept {
     _Storage._Size -= _Count; // subtract once
     _Thread_list_node* _Node;
     while (_Count-- > 0) {
-        _Node               = _Storage._Last;
+        _Node               = _Storage._Tail;
         _Node->_Prev->_Next = nullptr;
-        _Storage._Last      = _Node->_Prev;
+        _Storage._Tail      = _Node->_Prev;
         _Node->~_Thread_list_node();
         _Al.deallocate(_Node, sizeof(_Thread_list_node));
     }
@@ -157,15 +154,15 @@ void _Thread_list::_Release() noexcept {
     _Thread_list_storage& _Storage = _Mypair._Val1;
     _Alloc& _Al                    = _Mypair._Get_val2();
     _Thread_list_node* _Next;
-    for (_Thread_list_node* _Node = _Storage._First; _Node != nullptr; _Node = _Next) {
+    for (_Thread_list_node* _Node = _Storage._Head; _Node != nullptr; _Node = _Next) {
         _Next = _Node->_Next;
         _Node->~_Thread_list_node();
         _Al.deallocate(_Node, sizeof(_Thread_list_node));
     }
 
-    _Storage._First = nullptr;
-    _Storage._Last  = nullptr;
-    _Storage._Size  = 0;
+    _Storage._Head = nullptr;
+    _Storage._Tail = nullptr;
+    _Storage._Size = 0;
 }
 
 // FUNCTION _Thread_list::_Select_thread
@@ -176,18 +173,36 @@ thread* _Thread_list::_Select_thread(size_t _Which) noexcept {
     }
 
     if (_Which == 0) { // select the first thread
-        return _TPLMGR addressof(_Storage._First->_Thread);
+        return _TPLMGR addressof(_Storage._Head->_Thread);
     } else if (_Which == _Storage._Size - 1) { // select the last thread
-        return _TPLMGR addressof(_Storage._Last->_Thread);
+        return _TPLMGR addressof(_Storage._Tail->_Thread);
     } else { // select the inner thread
-        _Thread_list_node* _Node = _Storage._First;
-        --_Which;
+        _Thread_list_node* _Node = _Storage._Head;
         while (_Which-- > 0) {
             _Node = _Node->_Next;
         }
 
         return _TPLMGR addressof(_Node->_Thread);
     }
+}
+
+// FUNCTION _Thread_list::_Select_thread_by_id
+thread* _Thread_list::_Select_thread_by_id(const thread::id _Id) noexcept {
+    _Thread_list_storage& _Storage = _Mypair._Val1;
+    if (_Storage._Size == 0) {
+        return nullptr;
+    }
+
+    _Thread_list_node* _Node = _Storage._Head;
+    while (_Node) {
+        if (_Node->_Thread.get_id() == _Id) {
+            return _TPLMGR addressof(_Node->_Thread);
+        }
+
+        _Node = _Node->_Next;
+    }
+
+    return nullptr;
 }
 
 // FUNCTION _Thread_list::_Select_any_waiting_thread
@@ -197,7 +212,7 @@ thread* _Thread_list::_Select_any_waiting_thread() noexcept {
         return nullptr;
     }
 
-    _Thread_list_node* _Node = _Storage._First;
+    _Thread_list_node* _Node = _Storage._Head;
     while (_Node) {
         if (_Node->_Thread.state() == thread_state::waiting) {
             return _TPLMGR addressof(_Node->_Thread);
@@ -216,9 +231,9 @@ thread* _Thread_list::_Select_thread_with_fewest_pending_tasks() noexcept {
         return nullptr;
     }
 
-    thread* _Result = _TPLMGR addressof(_Storage._First->_Thread); // first thread by default
+    thread* _Result = _TPLMGR addressof(_Storage._Head->_Thread); // first thread by default
     size_t _Count   = _Result->pending_tasks();
-    for (_Thread_list_node* _Node = _Storage._First->_Next; _Node != nullptr; _Node = _Node->_Next) {
+    for (_Thread_list_node* _Node = _Storage._Head->_Next; _Node != nullptr; _Node = _Node->_Next) {
         const size_t _Tasks = _Node->_Thread.pending_tasks();
         if (_Tasks < _Count) {
             _Result = _TPLMGR addressof(_Node->_Thread);
@@ -304,6 +319,11 @@ _NODISCARD_ATTR thread_pool::statistics thread_pool::collect_statistics() noexce
     );
 
     return _Result;
+}
+
+// FUNCTION thread_pool::is_thread_in_pool
+bool thread_pool::is_thread_in_pool(const thread::id _Id) const noexcept {
+    return _Mylist._Select_thread_by_id(_Id) != nullptr;
 }
 
 // FUNCTION thread_pool::increase_threads
