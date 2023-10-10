@@ -1,7 +1,7 @@
 thread-pool
 ---
 
->**WARNING: This API is deprecated and will be removed soon.**
+>**WARNING: This API is deprecated and will be removed soon. Use [MJSYNC](https://github.com/MateuszJanduraUszu/mjsync) for similar features and more.**
 
 A simple thread-pool implementation in C++11 with features from the latest version (if possible).
 
