@@ -1,6 +1,8 @@
 thread-pool
 ---
 
+>**WARNING: This API is deprecated and will be removed soon.**
+
 A simple thread-pool implementation in C++11 with features from the latest version (if possible).
 
 Features
